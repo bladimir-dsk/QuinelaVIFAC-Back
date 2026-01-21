@@ -32,7 +32,7 @@ export class User {
 
   //es de tipo enum
   //el rol por defecto lo va a guardar como user
-  @Column({ type: 'enum', default: Role.ESTUDIANTE, enum: Role }) //tipamos enum para que solo pueda resivir los tipos de roles del enum
+  @Column({ type: 'enum', default: Role.PARTICIPANTE, enum: Role }) //tipamos enum para que solo pueda resivir los tipos de roles del enum
   role: Role;
 
   @Column({ nullable: true })
