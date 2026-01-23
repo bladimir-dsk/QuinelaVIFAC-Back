@@ -1,10 +1,12 @@
 import { Empresa } from 'src/empresa/entities/empresa.entity';
+import { Match } from 'src/matches/entities/match.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -18,6 +20,12 @@ export class Team {
 
   @Column({ nullable: true })
   flagUrl: string;
+
+  @OneToMany(() => Match, (match) => match.teamA)
+  matchesA: Match[];
+
+  @OneToMany(() => Match, (match) => match.teamB)
+  matchesB: Match[];
 
   @ManyToOne(() => User, (user) => user.email)
   @JoinColumn({ name: 'userEmail', referencedColumnName: 'email' })

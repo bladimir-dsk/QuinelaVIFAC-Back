@@ -12,6 +12,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { UserPrediction } from 'src/user-prediction/entities/user-prediction.entity';
 
 @Entity()
 export class User {
@@ -59,4 +60,7 @@ export class User {
   })
   @JoinColumn({ name: 'id_empresa' })
   empresa: Empresa;
+
+  @OneToMany(() => UserPrediction, (prediction) => prediction.user)
+  predictions: UserPrediction[];
 }

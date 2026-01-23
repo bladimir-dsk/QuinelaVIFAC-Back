@@ -11,9 +11,9 @@ async function bootstrap() {
 
   // Configurar el prefijo global para todas las rutas
   app.setGlobalPrefix('api/v1');
- // Configurar la zona horaria para toda la aplicación
- process.env.TZ = 'America/Mexico_City';
- moment.tz.setDefault('America/Mexico_City');
+  // Configurar la zona horaria para toda la aplicación
+  process.env.TZ = 'America/Mexico_City';
+  moment.tz.setDefault('America/Mexico_City');
   // Configurar el manejo del cuerpo de las solicitudes
   app.use(
     express.json({
@@ -37,14 +37,14 @@ async function bootstrap() {
   // Habilitar CORS
   app.enableCors();
 
-   // Servir archivos estáticos desde la carpeta /uploads
-   app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+  // Servir archivos estáticos desde la carpeta /uploads
+  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
-    // Servir archivos estáticos
+  // Servir archivos estáticos
   app.use('/facturas', express.static(join(__dirname, '..', 'facturas')));
 
-  setupSwagger(app)
+  setupSwagger(app);
   // Iniciar la aplicación
-  await app.listen(parseInt(process.env.PORT || '3000' ));
+  await app.listen(parseInt(process.env.PORT || '3001'));
 }
 bootstrap();

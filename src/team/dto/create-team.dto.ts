@@ -5,6 +5,7 @@ export class CreateTeamDto {
   @IsString()
   @ApiProperty()
   name: string;
+
   @IsString()
   @ApiProperty()
   flagUrl: string;

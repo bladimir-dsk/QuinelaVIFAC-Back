@@ -3,8 +3,8 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 export const setupSwagger = (app: INestApplication) => {
   const config = new DocumentBuilder()
-    .setTitle('APP SIAGROSIS API REST')
-    .setDescription('Apis para el sistema de siagro')
+    .setTitle('APP DE VIFAC 2026')
+    .setDescription('Apis para el sistema de vifac 2026')
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -19,5 +19,7 @@ export const setupSwagger = (app: INestApplication) => {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('api', app, document, {
+    customSiteTitle: 'VIFAC 2026 API',
+  });
 };
