@@ -1,34 +1,102 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UserPredictionService } from './user-prediction.service';
 import { CreateUserPredictionDto } from './dto/create-user-prediction.dto';
 import { UpdateUserPredictionDto } from './dto/update-user-prediction.dto';
+import { ApiBasicAuth, ApiTags } from '@nestjs/swagger';
+import { ActiveUser } from 'src/common/decorators/active-user.decorator';
+import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
+import { Auth } from 'src/auth/decorators/auth.decorator';
+import { Role } from 'src/common/enums/rol.enum';
 
+@ApiBasicAuth('jwt')
+@ApiTags('Usuario predicciones')
 @Controller('user-prediction')
 export class UserPredictionController {
   constructor(private readonly userPredictionService: UserPredictionService) {}
 
+  // ==================== CREAR PREDICCIÓN ====================
   @Post()
-  create(@Body() createUserPredictionDto: CreateUserPredictionDto) {
-    return this.userPredictionService.create(createUserPredictionDto);
+  @Auth(Role.PARTICIPANTE)
+  create(
+    @Body() createUserPredictionDto: CreateUserPredictionDto,
+    @ActiveUser() user: UserActiveInterface,
+  ) {
+    return this.userPredictionService.create(createUserPredictionDto, user);
   }
 
+  // ==================== RANKINGS ====================
+  // ⚠️ IMPORTANTE: Las rutas específicas deben ir ANTES de las rutas con parámetros
+
+  @Get('ranking/global')
+  @Auth(Role.PARTICIPANTE)
+  getGlobalRanking(@ActiveUser() user: UserActiveInterface) {
+    return this.userPredictionService.getGlobalRanking(user);
+  }
+
+  @Get('ranking/phase/:id_phase')
+  @Auth(Role.PARTICIPANTE)
+  getRankingByPhase(
+    @Param('id_phase', ParseIntPipe) id_phase: number,
+    @ActiveUser() user: UserActiveInterface,
+  ) {
+    return this.userPredictionService.getRankingByPhase(id_phase, user);
+  }
+
+  // ==================== ADMIN: CERRAR PARTIDO ====================
+  @Patch('close-match/:id_match/:id_teamWinner')
+  @Auth(Role.ADMIN)
+  closeMatch(
+    @Param('id_match', ParseIntPipe) id_match: number,
+    @Param('id_teamWinner', ParseIntPipe) id_teamWinner: number,
+    @ActiveUser() user: UserActiveInterface,
+  ) {
+    return this.userPredictionService.closeMatch(id_match, id_teamWinner, user);
+  }
+
+  // ==================== VER MIS PREDICCIONES ====================
   @Get()
-  findAll() {
-    return this.userPredictionService.findAll();
+  @Auth(Role.PARTICIPANTE)
+  findAll(@ActiveUser() user: UserActiveInterface) {
+    return this.userPredictionService.findAll(user);
   }
 
+  // ==================== VER UNA PREDICCIÓN ====================
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userPredictionService.findOne(+id);
+  @Auth(Role.PARTICIPANTE) // ✅ Cambiado: los usuarios pueden ver sus propias predicciones
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() user: UserActiveInterface,
+  ) {
+    return this.userPredictionService.findOne(id, user);
   }
 
+  // ==================== ACTUALIZAR PREDICCIÓN ====================
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserPredictionDto: UpdateUserPredictionDto) {
-    return this.userPredictionService.update(+id, updateUserPredictionDto);
+  @Auth(Role.PARTICIPANTE)
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateUserPredictionDto: UpdateUserPredictionDto,
+    @ActiveUser() user: UserActiveInterface,
+  ) {
+    return this.userPredictionService.update(id, updateUserPredictionDto, user);
   }
 
+  // ==================== ELIMINAR PREDICCIÓN ====================
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userPredictionService.remove(+id);
+  @Auth(Role.PARTICIPANTE) // ✅ Cambiado: los usuarios pueden eliminar sus propias predicciones
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @ActiveUser() user: UserActiveInterface,
+  ) {
+    return this.userPredictionService.remove(id, user);
   }
 }

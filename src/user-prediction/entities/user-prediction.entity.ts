@@ -15,10 +15,10 @@ export class UserPrediction {
   @PrimaryGeneratedColumn()
   id_userPrediction: number;
 
-  @Column()
+  @Column({ default: false })
   isCorrect: boolean;
 
-  @Column()
+  @Column({ default: 0 })
   points: number;
 
   @ManyToOne(() => Match, (match) => match.predictions)
@@ -27,14 +27,11 @@ export class UserPrediction {
   @ManyToOne(() => Team)
   selectedTeam: Team;
 
+  // ❌ ELIMINAR 'usuario' - solo necesitas una relación con User
   @ManyToOne(() => User, (user) => user.predictions)
-  usuario: User;
-
-  @ManyToOne(() => User, (user) => user.email)
   @JoinColumn({ name: 'userEmail', referencedColumnName: 'email' })
   user: User;
 
-  //creamos una columna para el email de referencedcolumn
   @Column()
   userEmail: string;
 

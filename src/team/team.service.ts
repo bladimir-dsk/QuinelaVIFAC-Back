@@ -22,6 +22,18 @@ export class TeamService {
     if (!empresa) {
       throw new BadRequestException('Empresa no encontrada');
     }
+
+    const exitingTeam = await this.teamRepository.findOne({
+      where: {
+        name: createTeamDto.name,
+        empresa: {
+          id_empresa: user.id_empresa,
+        },
+      },
+    });
+    if (exitingTeam) {
+      throw new BadRequestException('Equipo ya existe');
+    }
     const team = this.teamRepository.create({
       ...createTeamDto,
       userEmail: user.email,
