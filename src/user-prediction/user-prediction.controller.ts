@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { UserPredictionService } from './user-prediction.service';
 import { CreateUserPredictionDto } from './dto/create-user-prediction.dto';
@@ -16,6 +17,7 @@ import { ActiveUser } from 'src/common/decorators/active-user.decorator';
 import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
 import { Auth } from 'src/auth/decorators/auth.decorator';
 import { Role } from 'src/common/enums/rol.enum';
+import { RankingFiltersDto } from './dto/ranking-filters.dto';
 
 @ApiBasicAuth('jwt')
 @ApiTags('Usuario predicciones')
@@ -49,6 +51,11 @@ export class UserPredictionController {
     @ActiveUser() user: UserActiveInterface,
   ) {
     return this.userPredictionService.getRankingByPhase(id_phase, user);
+  }
+
+  @Get('public/ranking/global')
+  async getPublicGlobalRanking(@Query() filters: RankingFiltersDto) {
+    return this.userPredictionService.getPublicGlobalRanking(filters);
   }
 
   // ==================== ADMIN: CERRAR PARTIDO ====================

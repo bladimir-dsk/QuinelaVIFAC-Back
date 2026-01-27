@@ -9,6 +9,7 @@ import { Team } from 'src/team/entities/team.entity';
 import { Empresa } from 'src/empresa/entities/empresa.entity';
 import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
 import { User } from 'src/users/entities/user.entity';
+import { RankingFiltersDto } from './dto/ranking-filters.dto';
 
 @Injectable()
 export class UserPredictionService {
@@ -345,19 +346,18 @@ export class UserPredictionService {
   async getGlobalRanking(user: UserActiveInterface) {
     const result = await this.predictionRepository
       .createQueryBuilder('p')
-      .select('p.userEmail', 'user')
-      .addSelect('SUM(p.points)', 'points')
-      .addSelect('COUNT(p.id_userPrediction)', 'totalPredictions')
-      .addSelect(
-        'SUM(CASE WHEN p.isCorrect = true THEN 1 ELSE 0 END)',
-        'correctPredictions',
-      )
+      .select([
+        'p.userEmail as user',
+        'COALESCE(SUM(p.points), 0) as points',
+        'COUNT(p.id_userPrediction) as "totalPredictions"',
+        'SUM(CASE WHEN p.isCorrect = true THEN 1 ELSE 0 END) as "correctPredictions"',
+      ])
       .where('p.id_empresa = :empresa', {
         empresa: user.id_empresa,
       })
       .groupBy('p.userEmail')
       .orderBy('points', 'DESC')
-      .addOrderBy('correctPredictions', 'DESC')
+      .addOrderBy('"correctPredictions"', 'DESC') // ✅ Con comillas dobles
       .getRawMany();
 
     return result.map((row, index) => ({
@@ -378,20 +378,19 @@ export class UserPredictionService {
       .createQueryBuilder('p')
       .innerJoin('p.match', 'm')
       .innerJoin('m.phase', 'phase')
-      .select('p.userEmail', 'user')
-      .addSelect('SUM(p.points)', 'points')
-      .addSelect('COUNT(p.id_userPrediction)', 'totalPredictions')
-      .addSelect(
-        'SUM(CASE WHEN p.isCorrect = true THEN 1 ELSE 0 END)',
-        'correctPredictions',
-      )
+      .select([
+        'p.userEmail as user',
+        'COALESCE(SUM(p.points), 0) as points',
+        'COUNT(p.id_userPrediction) as "totalPredictions"',
+        'SUM(CASE WHEN p.isCorrect = true THEN 1 ELSE 0 END) as "correctPredictions"',
+      ])
       .where('phase.id_phase = :id_phase', { id_phase })
       .andWhere('p.id_empresa = :empresa', {
         empresa: user.id_empresa,
       })
       .groupBy('p.userEmail')
       .orderBy('points', 'DESC')
-      .addOrderBy('correctPredictions', 'DESC')
+      .addOrderBy('"correctPredictions"', 'DESC') // ✅ Con comillas dobles
       .getRawMany();
 
     return result.map((row, index) => ({
@@ -405,5 +404,101 @@ export class UserPredictionService {
           ? ((row.correctPredictions / row.totalPredictions) * 100).toFixed(2)
           : '0.00',
     }));
+  }
+
+  // ================= RANKING GLOBAL PÚBLICO =================
+  async getPublicGlobalRanking(filters: RankingFiltersDto) {
+    const { userEmail, page = 1, limit = 10 } = filters;
+
+    // Query base para obtener el ranking completo
+    const fullRanking = await this.predictionRepository
+      .createQueryBuilder('p')
+      .innerJoin('p.user', 'user')
+      .select('p.userEmail', 'userEmail')
+      .addSelect('user.name', 'username')
+      .addSelect('COALESCE(SUM(p.points), 0)', 'points')
+      .addSelect('COUNT(p.id_userPrediction)', 'totalPredictions')
+      .addSelect(
+        'SUM(CASE WHEN p.isCorrect = true THEN 1 ELSE 0 END)',
+        'correctPredictions',
+      )
+      .addSelect(
+        'SUM(CASE WHEN p.isCorrect = false THEN 1 ELSE 0 END)',
+        'incorrectPredictions',
+      )
+      .groupBy('p.userEmail')
+      .addGroupBy('user.name')
+      .orderBy('points', 'DESC')
+      .addOrderBy('SUM(CASE WHEN p.isCorrect = true THEN 1 ELSE 0 END)', 'DESC')
+      .addOrderBy('COUNT(p.id_userPrediction)', 'ASC')
+      .getRawMany();
+
+    // Mapear con posiciones
+    const rankingWithPositions = fullRanking.map((row, index) => ({
+      position: index + 1,
+      userEmail: row.userEmail,
+      username: row.username,
+      points: parseInt(row.points) || 0,
+      totalPredictions: parseInt(row.totalpredictions) || 0,
+      correctPredictions: parseInt(row.correctpredictions) || 0,
+      incorrectPredictions: parseInt(row.incorrectpredictions) || 0,
+      accuracy:
+        row.totalpredictions > 0
+          ? parseFloat(
+              ((row.correctpredictions / row.totalpredictions) * 100).toFixed(
+                2,
+              ),
+            )
+          : 0,
+    }));
+
+    // Si se busca un usuario específico
+    if (userEmail) {
+      const userRanking = rankingWithPositions.find(
+        (r) => r.userEmail.toLowerCase() === userEmail.toLowerCase(),
+      );
+
+      if (!userRanking) {
+        return {
+          total: rankingWithPositions.length,
+          userPosition: null,
+          userStats: null,
+          top10: rankingWithPositions.slice(0, 10),
+          message: 'Usuario no encontrado en el ranking',
+        };
+      }
+
+      // Obtener contexto: 5 antes y 5 después del usuario
+      const userIndex = userRanking.position - 1;
+      const start = Math.max(0, userIndex - 5);
+      const end = Math.min(rankingWithPositions.length, userIndex + 6);
+      const contextRanking = rankingWithPositions.slice(start, end);
+
+      return {
+        total: rankingWithPositions.length,
+        userPosition: userRanking.position,
+        userStats: userRanking,
+        top10: rankingWithPositions.slice(0, 10),
+        contextRanking,
+        message: `Usuario encontrado en la posición ${userRanking.position}`,
+      };
+    }
+
+    // Si no se busca usuario, retornar paginado
+    const skip = (page - 1) * limit;
+    const paginatedRanking = rankingWithPositions.slice(skip, skip + limit);
+
+    return {
+      total: rankingWithPositions.length,
+      top10: rankingWithPositions.slice(0, 10),
+      ranking: paginatedRanking,
+      paginacion: {
+        page,
+        limit,
+        totalPages: Math.ceil(rankingWithPositions.length / limit),
+        hasNext: page < Math.ceil(rankingWithPositions.length / limit),
+        hasPrev: page > 1,
+      },
+    };
   }
 }

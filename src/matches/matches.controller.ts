@@ -41,21 +41,21 @@ export class MatchesController {
     return this.matchesService.findOne(id);
   }
 
-  @Get('available-for-prediction')
-  @Auth(Role.PARTICIPANTE)
-  async getAvailableMatches(@ActiveUser() user: UserActiveInterface) {
-    return this.matchesService.findAvailableForPrediction(user);
-  }
+  // @Get('available-for-prediction')
+  // @Auth(Role.PARTICIPANTE)
+  // async getAvailableMatches(@ActiveUser() user: UserActiveInterface) {
+  //   return this.matchesService.findAvailableForPrediction(user);
+  // }
 
-  @Get('set-winner/:id/:id_teamWinner')
-  @Auth(Role.ADMIN)
-  setWinner(
-    @Param('id') id: number,
-    @Param('id_teamWinner') id_teamWinner: number,
-    @ActiveUser() user: UserActiveInterface,
-  ) {
-    return this.matchesService.setWinner(id, id_teamWinner, user);
-  }
+  // @Get('set-winner/:id/:id_teamWinner')
+  // @Auth(Role.ADMIN)
+  // setWinner(
+  //   @Param('id') id: number,
+  //   @Param('id_teamWinner') id_teamWinner: number,
+  //   @ActiveUser() user: UserActiveInterface,
+  // ) {
+  //   return this.matchesService.setWinner(id, id_teamWinner, user);
+  // }
 
   @Patch(':id')
   @Auth(Role.ADMIN)
