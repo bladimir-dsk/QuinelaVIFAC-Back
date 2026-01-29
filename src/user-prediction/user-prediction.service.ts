@@ -410,12 +410,11 @@ export class UserPredictionService {
   async getPublicGlobalRanking(filters: RankingFiltersDto) {
     const { userEmail, page = 1, limit = 10 } = filters;
 
-    // Query base para obtener el ranking completo
     const fullRanking = await this.predictionRepository
       .createQueryBuilder('p')
-      .innerJoin('p.user', 'user')
+      .leftJoin('p.user', 'user')
       .select('p.userEmail', 'userEmail')
-      .addSelect('user.name', 'username')
+      .addSelect('COALESCE(user.name, p.userEmail)', 'username')
       .addSelect('COALESCE(SUM(p.points), 0)', 'points')
       .addSelect('COUNT(p.id_userPrediction)', 'totalPredictions')
       .addSelect(
@@ -433,19 +432,18 @@ export class UserPredictionService {
       .addOrderBy('COUNT(p.id_userPrediction)', 'ASC')
       .getRawMany();
 
-    // Mapear con posiciones
     const rankingWithPositions = fullRanking.map((row, index) => ({
       position: index + 1,
       userEmail: row.userEmail,
       username: row.username,
       points: parseInt(row.points) || 0,
-      totalPredictions: parseInt(row.totalpredictions) || 0,
-      correctPredictions: parseInt(row.correctpredictions) || 0,
-      incorrectPredictions: parseInt(row.incorrectpredictions) || 0,
+      totalPredictions: parseInt(row.totalPredictions) || 0,
+      correctPredictions: parseInt(row.correctPredictions) || 0,
+      incorrectPredictions: parseInt(row.incorrectPredictions) || 0,
       accuracy:
-        row.totalpredictions > 0
+        row.totalPredictions > 0
           ? parseFloat(
-              ((row.correctpredictions / row.totalpredictions) * 100).toFixed(
+              ((row.correctPredictions / row.totalPredictions) * 100).toFixed(
                 2,
               ),
             )
@@ -468,7 +466,6 @@ export class UserPredictionService {
         };
       }
 
-      // Obtener contexto: 5 antes y 5 después del usuario
       const userIndex = userRanking.position - 1;
       const start = Math.max(0, userIndex - 5);
       const end = Math.min(rankingWithPositions.length, userIndex + 6);
