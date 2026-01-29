@@ -53,15 +53,8 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  // @Get('profile')// ruta que nos da acceso dependiendo del rol
-  // @Roles(Role.ADMIN)//Role viene del enum
-  // @UseGuards(AuthGuard, RolesGuard)
-  // profile(@Req() req: RequestWithUser) {
-  // return this.authService.profile(req.user)
-  // }
-
   @Get('profile') // ruta que nos da acceso dependiendo del rol
-  @Auth(Role.ADMIN) //auth es un decorador que une los guards y los roles
+  @Auth([Role.ADMIN, Role.PARTICIPANTE]) //auth es un decorador que une los guards y los roles
   profile(@ActiveUser() user: UserActiveInterface) {
     return this.authService.profile(user);
   }
@@ -72,27 +65,9 @@ export class AuthController {
     return this.authService.usuarios(user);
   }
 
-  @Auth(Role.ADMIN)
-  @Get('usuarios-empresa')
-  usuariosEmpresa(@ActiveUser() user: UserActiveInterface) {
-    return this.authService.usuariosEmpresa(user);
-  }
-
-  @Auth(Role.ADMIN)
-  @Get('usuarios-empleado')
-  usuariosEmpleado(@ActiveUser() user: UserActiveInterface) {
-    return this.authService.usuariosEmpleado(user);
-  }
-
-  @Auth([Role.ADMIN, Role.PROPIETARIO])
-  @Get('yo')
-  me(@ActiveUser() user: UserActiveInterface) {
-    return this.authService.me(user);
-  }
-
   // Ruta para que el usuario actualice su propio perfil
   @Patch('profile')
-  @Auth([Role.ADMIN, Role.PROPIETARIO]) // Requiere autenticación
+  @Auth([Role.ADMIN, Role.PARTICIPANTE]) // Requiere autenticación
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
   async updateProfile(
     @ActiveUser() user: UserActiveInterface,
@@ -103,7 +78,7 @@ export class AuthController {
 
   // Ruta para que un admin actualice cualquier usuario
   @Patch('user/:id')
-  @Auth([Role.ADMIN, Role.PROPIETARIO]) // Requiere autenticación (el método verificará que sea admin)
+  @Auth([Role.ADMIN, Role.PARTICIPANTE]) // Requiere autenticación (el método verificará que sea admin)
   async updateUser(
     @ActiveUser() user: UserActiveInterface,
     @Param('id', ParseIntPipe) userId: number,

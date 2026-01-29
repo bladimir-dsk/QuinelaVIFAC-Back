@@ -48,6 +48,12 @@ export class User {
   @Column({ nullable: true })
   middleName: string;
 
+  @Column({ nullable: true })
+  personEmail: string;
+
+  @Column({ nullable: true })
+  direction: string;
+
   //deletedatecolumn es para hacer eliminaciones logicas y no fisicas en la base de datos
   @DeleteDateColumn()
   deletedAt: Date;
