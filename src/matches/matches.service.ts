@@ -9,6 +9,7 @@ import { Group } from 'src/groups/entities/group.entity';
 import { Team } from 'src/team/entities/team.entity';
 import { Empresa } from 'src/empresa/entities/empresa.entity';
 import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
+import { UserPrediction } from 'src/user-prediction/entities/user-prediction.entity';
 
 @Injectable()
 export class MatchesService {
@@ -378,22 +379,29 @@ export class MatchesService {
     return this.matchRepository.remove(match);
   }
 
-  // async findAvailableForPrediction(user: UserActiveInterface) {
-  //   const now = new Date();
-
-  //   return this.matchRepository
-  //     .find({
-  //       where: {
-  //         empresa: { id_empresa: user.id_empresa },
-  //         isFinished: false,
-  //       },
-  //       relations: ['phase', 'group', 'teamA', 'teamB'],
-  //       order: {
-  //         matchDate: 'ASC',
-  //       },
-  //     })
-  //     .then((matches) =>
-  //       matches.filter((match) => new Date(match.matchDate) > now),
-  //     );
-  // }
+  async findMatchesWhereUserHasNotVoted(user: UserActiveInterface) {
+    return this.matchRepository
+      .createQueryBuilder('m')
+      .leftJoin(
+        'user_predictions', // ✅ Usar nombre de tabla directamente
+        'p',
+        'p.matchIdMatch = m.id_match AND p.userEmail = :email AND p.id_empresa = :empresa',
+        {
+          email: user.email,
+          empresa: user.id_empresa,
+        },
+      )
+      .where('m.id_empresa = :empresa', {
+        empresa: user.id_empresa,
+      })
+      .andWhere('p.id_userPrediction IS NULL') // 👈 NO ha votado
+      .andWhere('m.isFinished = false')
+      .andWhere('m.matchDate > NOW()')
+      .leftJoinAndSelect('m.phase', 'phase')
+      .leftJoinAndSelect('m.group', 'group')
+      .leftJoinAndSelect('m.teamA', 'teamA')
+      .leftJoinAndSelect('m.teamB', 'teamB')
+      .orderBy('m.matchDate', 'ASC')
+      .getMany();
+  }
 }

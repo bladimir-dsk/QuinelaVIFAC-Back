@@ -35,6 +35,11 @@ export class MatchesController {
   findAll() {
     return this.matchesService.findAll();
   }
+  @Get('available-for-voting')
+  @Auth(Role.PARTICIPANTE)
+  async getAvailableMatches(@ActiveUser() user: UserActiveInterface) {
+    return this.matchesService.findMatchesWhereUserHasNotVoted(user);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: number) {
