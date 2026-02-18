@@ -85,35 +85,14 @@ export class AuthService {
     };
   }
 
-  async profile({ email, role }: { email: string; role: string }) {
-    //VALIDAMOS QUE EL USUARIO CUMPLA CON EL ROL DE ADMIN PARA DEJARLO INGRESAR
-    //if(role !== 'admin'){
-    //    throw new UnauthorizedException('NO ESTAS AUTORIZADO PARA INGRESAR, DEBES DE SER ADMIN')
-    // }
-
-    return await this.usersService.findOneByEmail(email);
-  }
   async usuarios(user: UserActiveInterface) {
     const users = await this.usersService.findAll();
     return users;
   }
 
-  async usuariosEmpresa(user: UserActiveInterface) {
-    const users = await this.usersService.findUsuariosEmpresa();
-    return users;
+  async profile({ email }: { email: string }) {
+    return await this.usersService.findOneByEmail(email);
   }
-
-  async usuariosEmpleado(user: UserActiveInterface) {
-    const users = await this.usersService.findUsuariosEmpleado();
-    return users;
-  }
-
-  async me(user: UserActiveInterface) {
-    const me = await this.usersService.miUsuario(user);
-    return me;
-  }
-
-  // Agrega estos métodos a tu AuthService
 
   // Método para actualizar el perfil del usuario autenticado
   async updateProfile(user: UserActiveInterface, updateUserDto: UpdateUserDto) {
@@ -131,6 +110,12 @@ export class AuthService {
           name: updatedUser.name,
           role: updatedUser.role,
           empresa: updatedUser.empresa,
+          code: updatedUser.code,
+          phone: updatedUser.phone,
+          firstName: updatedUser.firstName,
+          middleName: updatedUser.middleName,
+          personEmail: updatedUser.personEmail,
+          direction: updatedUser.direction,
         },
       };
     } catch (error) {
@@ -184,6 +169,12 @@ export class AuthService {
           name: updatedUser.name,
           role: updatedUser.role,
           empresa: updatedUser.empresa,
+          code: updatedUser.code,
+          phone: updatedUser.phone,
+          firstName: updatedUser.firstName,
+          middleName: updatedUser.middleName,
+          personEmail: updatedUser.personEmail,
+          direction: updatedUser.direction,
         },
       };
     } catch (error) {

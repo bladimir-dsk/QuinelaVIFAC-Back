@@ -1,10 +1,13 @@
 import { Empresa } from 'src/empresa/entities/empresa.entity';
+import { Group } from 'src/groups/entities/group.entity';
+import { Match } from 'src/matches/entities/match.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -18,6 +21,12 @@ export class Phase {
 
   @Column()
   order: number;
+
+  @OneToMany(() => Group, (group) => group.phase)
+  groups: Group[];
+
+  @OneToMany(() => Match, (match) => match.phase)
+  matches: Match[];
 
   @ManyToOne(() => User, (user) => user.email)
   @JoinColumn({ name: 'userEmail', referencedColumnName: 'email' })

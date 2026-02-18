@@ -8,35 +8,57 @@ import {
   MinLength,
 } from 'class-validator';
 import { Role } from 'src/common/enums/rol.enum';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
+  @ApiProperty()
   @IsOptional()
   @IsEmail({}, { message: 'El email debe tener un formato válido' })
-  @IsNotEmpty({ message: 'El email no puede estar vacío' })
   email?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString({ message: 'La contraseña debe ser una cadena de texto' })
   @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
-  @IsNotEmpty({ message: 'La contraseña no puede estar vacía' })
   password?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
   name?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
-  nbPrimerApellido?: string;
+  code?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
-  nbSegundoApellido?: string;
+  phone?: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
-  numTelefonoCelular?: string;
+  firstName?: string;
 
+  @ApiProperty()
   @IsOptional()
+  @IsString()
+  middleName?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  direction?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  personEmail?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
   role?: Role;
 }

@@ -37,4 +37,14 @@ export class UpdateProfileDto {
   @IsOptional()
   @IsString()
   middleName?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  direction?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  personEmail?: string;
 }

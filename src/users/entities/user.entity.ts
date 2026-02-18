@@ -12,6 +12,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { UserPrediction } from 'src/user-prediction/entities/user-prediction.entity';
 
 @Entity()
 export class User {
@@ -47,6 +48,12 @@ export class User {
   @Column({ nullable: true })
   middleName: string;
 
+  @Column({ nullable: true })
+  personEmail: string;
+
+  @Column({ nullable: true })
+  direction: string;
+
   //deletedatecolumn es para hacer eliminaciones logicas y no fisicas en la base de datos
   @DeleteDateColumn()
   deletedAt: Date;
@@ -59,4 +66,7 @@ export class User {
   })
   @JoinColumn({ name: 'id_empresa' })
   empresa: Empresa;
+
+  @OneToMany(() => UserPrediction, (prediction) => prediction.user)
+  predictions: UserPrediction[];
 }

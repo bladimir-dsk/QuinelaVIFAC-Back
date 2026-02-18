@@ -9,6 +9,10 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { TeamModule } from './team/team.module';
 import { PhasesModule } from './phases/phases.module';
+import { GroupsModule } from './groups/groups.module';
+import { MatchesModule } from './matches/matches.module';
+import { UserPredictionModule } from './user-prediction/user-prediction.module';
+import { UserScoresModule } from './user-scores/user-scores.module';
 
 dotenv.config();
 
@@ -43,6 +47,10 @@ dotenv.config();
     EmpresaModule,
     TeamModule,
     PhasesModule,
+    GroupsModule,
+    MatchesModule,
+    UserPredictionModule,
+    UserScoresModule,
   ],
   controllers: [],
   providers: [],
