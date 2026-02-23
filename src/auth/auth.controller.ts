@@ -10,6 +10,9 @@ import {
   ParseIntPipe,
   ValidationPipe,
   UsePipes,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -24,7 +27,8 @@ import { ActiveUser } from 'src/common/decorators/active-user.decorator';
 import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
 import { UpdateUserDto } from 'src/users/dto/update-user.dto';
 import { UpdateProfileDto } from './dto/UpdateProfileDto';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 //creamos una interfaz para poner el reques del profile y extender el reques
 interface RequestWithUser extends Request {
@@ -63,6 +67,25 @@ export class AuthController {
   @Get('usuarios')
   usuarios(@ActiveUser() user: UserActiveInterface) {
     return this.authService.usuarios(user);
+  }
+
+  @Post('bulk-register')
+  @Auth([Role.ADMIN])
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  async bulkRegister(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No se envió ningún archivo');
+    }
+    return await this.authService.bulkRegister(file.buffer);
   }
 
   // Ruta para que el usuario actualice su propio perfil

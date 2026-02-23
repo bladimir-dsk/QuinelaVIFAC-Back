@@ -12,6 +12,7 @@ import { LoginDto } from './dto/login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserActiveInterface } from 'src/common/interfaces/user-active.interface';
 import { UpdateUserDto } from 'src/users/dto/update-user.dto';
+import * as XLSX from 'xlsx';
 
 @Injectable()
 export class AuthService {
@@ -190,5 +191,66 @@ export class AuthService {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async bulkRegister(fileBuffer: Buffer) {
+    const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const rows: { email: string; password: string }[] =
+      XLSX.utils.sheet_to_json(sheet);
+
+    const results = {
+      success: [] as string[],
+      errors: [] as { email: string; error: string }[],
+    };
+
+    // Buscar la empresa con id 1
+    const empresa = await this.usersService.findEmpresaById(1);
+    if (!empresa) {
+      throw new BadRequestException('La empresa con id 1 no existe');
+    }
+
+    for (const row of rows) {
+      const { email, password } = row;
+
+      if (!email || !password) {
+        results.errors.push({
+          email: email ?? 'desconocido',
+          error: 'Faltan campos requeridos',
+        });
+        continue;
+      }
+
+      try {
+        const userExists = await this.usersService.findOneByEmail(email.trim());
+        if (userExists) {
+          results.errors.push({ email, error: 'El email ya está registrado' });
+          continue;
+        }
+
+        const hashedPassword = await bcryptjs.hash(password.toString(), 10);
+
+        await this.usersService.create({
+          email: email.trim(),
+          password: hashedPassword,
+          empresa, // objeto Empresa
+          name: null, // nombre por defecto, ajusta si tienes columna name
+          code: null,
+          phone: null,
+          firstName: null,
+          middleName: null,
+        } as any);
+
+        results.success.push(email);
+      } catch (error) {
+        results.errors.push({ email, error: error.message });
+      }
+    }
+
+    return {
+      message: `Carga masiva completada: ${results.success.length} registrados, ${results.errors.length} errores`,
+      ...results,
+    };
   }
 }
