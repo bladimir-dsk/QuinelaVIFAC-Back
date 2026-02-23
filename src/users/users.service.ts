@@ -326,4 +326,8 @@ export class UsersService {
     // Usar el método seguro para actualizar
     return await this.updateSafe(currentUser.id, updateUserDto);
   }
+
+  findEmpresaById(id: number) {
+    return this.empresaRepository.findOneBy({ id_empresa: id });
+  }
 }
